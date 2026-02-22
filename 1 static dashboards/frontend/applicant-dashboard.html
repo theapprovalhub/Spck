@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Status - Choice Properties</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Additional styles to match the old dashboard exactly */
+    body { background: #f5f7fa; }
+    .status-badge { color: white; padding: 15px; border-radius: 8px; text-align: center; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .app-id { background: #e8f4fc; padding: 15px; font-family: monospace; font-size: 18px; text-align: center; border-radius: 8px; border: 1px dashed #1a5276; }
+    .payment-card { background: #fff3cd; border: 1px solid #f39c12; border-radius: 8px; padding: 20px; }
+    .info-card { background: #f8f9fa; border-left: 4px solid #3498db; border-radius: 8px; padding: 20px; }
+    .toggle-btn { background: #ecf0f1; border: 1px solid #bdc3c7; color: #2c3e50; padding: 8px 16px; border-radius: 30px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+    .toggle-btn:hover { background: #bdc3c7; }
+    .extra-details { display: none; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-lg border-0 rounded-4">
+          <div class="card-header bg-primary text-white text-center py-4 rounded-top-4">
+            <h2 class="h4 mb-0">🏢 Choice Properties</h2>
+            <p class="mb-0 small">Application Status</p>
+          </div>
+          <div class="card-body p-4">
+            <!-- Status badge (filled by JS) -->
+            <div class="status-badge mb-4" id="statusBadge"></div>
+
+            <!-- Application ID -->
+            <div class="app-id mb-4">
+              <strong>Application ID:</strong> <span id="appIdDisplay"></span>
+            </div>
+
+            <!-- Payment pending section (visible only if unpaid) -->
+            <div id="paymentPendingSection" class="payment-card mb-4" style="display: none;">
+              <h5 class="text-warning">⏳ PAYMENT PENDING</h5>
+              <p>Your application is on hold until the $50 fee is paid.</p>
+              <p>Our payment team will TEXT you at <strong id="phoneDisplay"></strong> within 24 hours to arrange payment.</p>
+              <div class="bg-light p-3 rounded">
+                <h6 class="mb-2">Your Selected Payment Methods:</h6>
+                <div id="paymentMethods"></div>
+              </div>
+            </div>
+
+            <!-- Main application details -->
+            <div class="info-card mb-4">
+              <h5>Application Details</h5>
+              <div class="row g-3">
+                <div class="col-sm-6">
+                  <div class="bg-white p-3 rounded shadow-sm">
+                    <strong class="text-primary d-block">Property</strong>
+                    <span id="propertyDisplay"></span>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="bg-white p-3 rounded shadow-sm">
+                    <strong class="text-primary d-block">Move-in Date</strong>
+                    <span id="moveInDisplay"></span>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="bg-white p-3 rounded shadow-sm">
+                    <strong class="text-primary d-block">Name</strong>
+                    <span id="nameDisplay"></span>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="bg-white p-3 rounded shadow-sm">
+                    <strong class="text-primary d-block">Email</strong>
+                    <span id="emailDisplay"></span>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="bg-white p-3 rounded shadow-sm">
+                    <strong class="text-primary d-block">Phone</strong>
+                    <span id="phoneDisplay2"></span>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="bg-white p-3 rounded shadow-sm">
+                    <strong class="text-primary d-block">Lease Term</strong>
+                    <span id="leaseTermDisplay"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Toggle button -->
+            <button class="toggle-btn btn btn-outline-secondary w-100 mb-3" onclick="toggleDetails()">📋 SHOW FULL APPLICATION DETAILS</button>
+
+            <!-- Extra details (populated by JS) -->
+            <div id="extraDetails" class="extra-details">
+              <!-- Co-applicant section -->
+              <div id="coApplicantSection" style="display: none;">
+                <h4 style="margin:20px 0 10px; color:#1a5276;">👥 Co-Applicant / Guarantor</h4>
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px;">
+                  <p><strong>Role:</strong> <span id="coRole"></span></p>
+                  <p><strong>Name:</strong> <span id="coName"></span></p>
+                  <p><strong>Email:</strong> <span id="coEmail"></span></p>
+                  <p><strong>Phone:</strong> <span id="coPhone"></span></p>
+                  <p><strong>DOB:</strong> <span id="coDob"></span></p>
+                  <p><strong>Employer:</strong> <span id="coEmployer"></span></p>
+                  <p><strong>Job Title:</strong> <span id="coJobTitle"></span></p>
+                  <p><strong>Monthly Income:</strong> $<span id="coIncome"></span></p>
+                  <p><strong>Employment Duration:</strong> <span id="coDuration"></span></p>
+                </div>
+              </div>
+
+              <!-- Vehicle section -->
+              <div id="vehicleSection" style="display: none;">
+                <h4 style="margin:20px 0 10px; color:#1a5276;">🚗 Vehicle Information</h4>
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px;">
+                  <p><strong>Make:</strong> <span id="vehicleMake"></span></p>
+                  <p><strong>Model:</strong> <span id="vehicleModel"></span></p>
+                  <p><strong>Year:</strong> <span id="vehicleYear"></span></p>
+                  <p><strong>License Plate:</strong> <span id="vehiclePlate"></span></p>
+                </div>
+              </div>
+
+              <!-- Emergency Contact Relationship -->
+              <div id="emergencyRelationSection" style="display: none;">
+                <h4 style="margin:20px 0 10px; color:#1a5276;">📞 Emergency Contact Relationship</h4>
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px;">
+                  <p><strong>Relationship:</strong> <span id="emergencyRelationship"></span></p>
+                </div>
+              </div>
+
+              <!-- Contact Preferences -->
+              <div id="contactPrefsSection" style="display: none;">
+                <h4 style="margin:20px 0 10px; color:#1a5276;">📱 Contact Preferences</h4>
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px;">
+                  <p><strong>Preferred Methods:</strong> <span id="prefMethods"></span></p>
+                  <p><strong>Preferred Times:</strong> <span id="prefTimes"></span></p>
+                  <p><strong>Additional Notes:</strong> <span id="prefNotes"></span></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact footer -->
+            <div class="bg-primary text-white p-4 rounded-4 mt-4 text-center">
+              <h5 class="mb-3">📱 QUESTIONS? TEXT US</h5>
+              <p class="display-6 mb-2">707-706-3137</p>
+              <p class="mb-0">📧 choicepropertygroup@hotmail.com</p>
+              <p class="mt-3 small">2265 Livernois, Suite 500<br>Troy, MI 48083</p>
+            </div>
+
+            <hr class="my-4">
+            <a href="index.html" class="btn btn-outline-primary w-100">← New Application</a>
+          </div>
+          <div class="card-footer text-center text-muted small py-3">
+            Choice Properties - Professional Property Management
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Configuration ---
+    const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL'; // Replace with your actual web app URL
+    const STATIC_DOMAIN = 'https://yourdomain.com'; // Replace with your static hosting domain
+
+    // Get app ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const appId = urlParams.get('id');
+
+    if (!appId) {
+      document.body.innerHTML = '<div class="container"><div class="alert alert-danger">No application ID provided.</div></div>';
+    } else {
+      // Show loading state
+      document.getElementById('appIdDisplay').textContent = 'Loading...';
+
+      fetch(`${APPS_SCRIPT_URL}?action=getApplication&id=${encodeURIComponent(appId)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) {
+            document.body.innerHTML = '<div class="container"><div class="alert alert-danger">Application not found.</div></div>';
+            return;
+          }
+          const app = data.application;
+          renderDashboard(app);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          document.body.innerHTML = '<div class="container"><div class="alert alert-danger">Failed to load application data.</div></div>';
+        });
+    }
+
+    function renderDashboard(app) {
+      // Set basic fields
+      document.getElementById('appIdDisplay').textContent = app['App ID'] || 'N/A';
+      document.getElementById('propertyDisplay').textContent = app['Property Address'] || 'Not specified';
+      document.getElementById('moveInDisplay').textContent = app['Requested Move-in Date'] || 'Not specified';
+      document.getElementById('nameDisplay').textContent = (app['First Name'] || '') + ' ' + (app['Last Name'] || '');
+      document.getElementById('emailDisplay').textContent = app['Email'] || 'Not specified';
+      document.getElementById('phoneDisplay').textContent = app['Phone'] || 'Not specified';
+      document.getElementById('phoneDisplay2').textContent = app['Phone'] || 'Not specified';
+      document.getElementById('leaseTermDisplay').textContent = app['Desired Lease Term'] || 'Not specified';
+
+      // Status badge
+      const statusBadge = document.getElementById('statusBadge');
+      const statusText = getStatusText(app);
+      const statusColor = getStatusColor(app);
+      statusBadge.innerHTML = statusText;
+      statusBadge.style.backgroundColor = statusColor;
+
+      // Payment pending section
+      if (app['Payment Status'] === 'unpaid') {
+        document.getElementById('paymentPendingSection').style.display = 'block';
+        const methods = getPaymentMethods(app);
+        document.getElementById('paymentMethods').innerHTML = methods.map(m => `<p class="mb-1">${m}</p>`).join('');
+      } else {
+        document.getElementById('paymentPendingSection').style.display = 'none';
+      }
+
+      // Populate extra details
+      populateExtraDetails(app);
+    }
+
+    function getStatusText(app) {
+      if (app['Payment Status'] === 'unpaid') return '⏳ PENDING PAYMENT';
+      if (app['Status'] === 'approved') return '✅ APPROVED';
+      if (app['Status'] === 'denied') return '❌ DENIED';
+      if (app['Payment Status'] === 'paid') return '🔄 UNDER REVIEW';
+      return '📝 PENDING';
+    }
+
+    function getStatusColor(app) {
+      if (app['Payment Status'] === 'unpaid') return '#f39c12';
+      if (app['Status'] === 'approved') return '#27ae60';
+      if (app['Status'] === 'denied') return '#e74c3c';
+      if (app['Payment Status'] === 'paid') return '#3498db';
+      return '#7f8c8d';
+    }
+
+    function getPaymentMethods(app) {
+      const methods = [];
+      if (app['Primary Payment Method']) {
+        if (app['Primary Payment Method'] === 'Other' && app['Primary Payment Method Other']) {
+          methods.push(`🥇 ${app['Primary Payment Method Other']}`);
+        } else {
+          methods.push(`🥇 ${app['Primary Payment Method']}`);
+        }
+      }
+      if (app['Alternative Payment Method']) {
+        if (app['Alternative Payment Method'] === 'Other' && app['Alternative Payment Method Other']) {
+          methods.push(`🥈 ${app['Alternative Payment Method Other']}`);
+        } else {
+          methods.push(`🥈 ${app['Alternative Payment Method']}`);
+        }
+      }
+      if (app['Third Choice Payment Method']) {
+        if (app['Third Choice Payment Method'] === 'Other' && app['Third Choice Payment Method Other']) {
+          methods.push(`🥉 ${app['Third Choice Payment Method Other']}`);
+        } else {
+          methods.push(`🥉 ${app['Third Choice Payment Method']}`);
+        }
+      }
+      return methods;
+    }
+
+    function populateExtraDetails(app) {
+      // Co-applicant
+      if (app['Has Co-Applicant'] && app['Co-Applicant First Name']) {
+        document.getElementById('coApplicantSection').style.display = 'block';
+        document.getElementById('coRole').textContent = app['Additional Person Role'] || '';
+        document.getElementById('coName').textContent = (app['Co-Applicant First Name'] || '') + ' ' + (app['Co-Applicant Last Name'] || '');
+        document.getElementById('coEmail').textContent = app['Co-Applicant Email'] || '';
+        document.getElementById('coPhone').textContent = app['Co-Applicant Phone'] || '';
+        document.getElementById('coDob').textContent = app['Co-Applicant DOB'] || '';
+        document.getElementById('coEmployer').textContent = app['Co-Applicant Employer'] || '';
+        document.getElementById('coJobTitle').textContent = app['Co-Applicant Job Title'] || '';
+        document.getElementById('coIncome').textContent = app['Co-Applicant Monthly Income'] || '0';
+        document.getElementById('coDuration').textContent = app['Co-Applicant Employment Duration'] || '';
+      }
+
+      // Vehicle
+      if (app['Vehicle Make']) {
+        document.getElementById('vehicleSection').style.display = 'block';
+        document.getElementById('vehicleMake').textContent = app['Vehicle Make'] || '';
+        document.getElementById('vehicleModel').textContent = app['Vehicle Model'] || '';
+        document.getElementById('vehicleYear').textContent = app['Vehicle Year'] || '';
+        document.getElementById('vehiclePlate').textContent = app['Vehicle License Plate'] || '';
+      }
+
+      // Emergency Contact Relationship
+      if (app['Emergency Contact Relationship']) {
+        document.getElementById('emergencyRelationSection').style.display = 'block';
+        document.getElementById('emergencyRelationship').textContent = app['Emergency Contact Relationship'];
+      }
+
+      // Contact Preferences
+      if (app['Preferred Contact Method'] || app['Preferred Time'] || app['Preferred Time Specific']) {
+        document.getElementById('contactPrefsSection').style.display = 'block';
+        document.getElementById('prefMethods').textContent = app['Preferred Contact Method'] || 'Not specified';
+        document.getElementById('prefTimes').textContent = app['Preferred Time'] || 'Not specified';
+        document.getElementById('prefNotes').textContent = app['Preferred Time Specific'] || 'None';
+      }
+    }
+
+    function toggleDetails() {
+      const details = document.getElementById('extraDetails');
+      const btn = document.querySelector('.toggle-btn');
+      if (details.style.display === 'none' || details.style.display === '') {
+        details.style.display = 'block';
+        btn.textContent = '📋 HIDE FULL DETAILS';
+      } else {
+        details.style.display = 'none';
+        btn.textContent = '📋 SHOW FULL APPLICATION DETAILS';
+      }
+    }
+  </script>
+</body>
+</html>
